@@ -9,7 +9,7 @@ namespace PieroDeTomi.EntityFrameworkCore.Identity.Cosmos.EntityConfigurations
     {
         private readonly string _tableName;
 
-        public RoleClaimEntityTypeConfiguration(string tableName = "Identity")
+        public RoleClaimEntityTypeConfiguration(string tableName = "Identity_RoleClaims")
         {
             _tableName = tableName;
         }
@@ -22,7 +22,7 @@ namespace PieroDeTomi.EntityFrameworkCore.Identity.Cosmos.EntityConfigurations
 
             builder
                 .UseETagConcurrency()
-                .HasPartitionKey(_ => _.Id);
+                .HasPartitionKey(_ => _.RoleId);
 
             builder.ToContainer(_tableName);
         }

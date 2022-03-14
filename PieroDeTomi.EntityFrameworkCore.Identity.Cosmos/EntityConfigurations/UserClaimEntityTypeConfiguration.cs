@@ -9,7 +9,7 @@ namespace PieroDeTomi.EntityFrameworkCore.Identity.Cosmos.EntityConfigurations
     {
         private readonly string _tableName;
 
-        public UserClaimEntityTypeConfiguration(string tableName = "Identity")
+        public UserClaimEntityTypeConfiguration(string tableName = "Identity_UserClaims")
         {
             _tableName = tableName;
         }

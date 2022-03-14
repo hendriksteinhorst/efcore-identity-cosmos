@@ -2,12 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using PieroDeTomi.EntityFrameworkCore.Identity.Cosmos.Contracts;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace PieroDeTomi.EntityFrameworkCore.Identity.Cosmos.Stores
 {
-    internal class CosmosRoleStore<TRoleEntity> : IRoleStore<TRoleEntity> where TRoleEntity : IdentityRole, new()
+    internal class CosmosRoleStore<TRoleEntity> : IRoleClaimStore<TRoleEntity> where TRoleEntity : IdentityRole, new()
     {
         private readonly IRepository _repo;
 
@@ -171,6 +174,70 @@ namespace PieroDeTomi.EntityFrameworkCore.Identity.Cosmos.Stores
             }
 
             return IdentityResult.Success;
+        }
+
+        public async Task<IList<Claim>> GetClaimsAsync(TRoleEntity role, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (role == null)
+            {
+                throw new ArgumentNullException(nameof(role));
+            }
+
+            var roleClaims = await _repo.FindAsync<IdentityRoleClaim<string>>(x => x.RoleId == role.Id);
+
+            return roleClaims.Select(x => x.ToClaim()).ToList();
+        }
+
+        public async Task AddClaimAsync(TRoleEntity role, Claim claim, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (role == null)
+            {
+                throw new ArgumentNullException(nameof(role));
+            }
+
+            if (claim == null)
+            {
+                throw new ArgumentNullException(nameof(claim));
+            }
+
+            var roleClaims = await _repo.Table<IdentityRoleClaim<string>>().ToListAsync();
+
+            var roleClaim = new IdentityRoleClaim<string>()
+            {
+                Id = roleClaims.Any() ? roleClaims.Max(x => x.Id) + 1 : 0,
+                ClaimType = claim.Type,
+                ClaimValue = claim.Value,
+                RoleId = role.Id,
+            };
+
+            await _repo.AddAsync(roleClaim);
+            await _repo.SaveChangesAsync();
+        }
+
+        public async Task RemoveClaimAsync(TRoleEntity role, Claim claim, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (role == null)
+            {
+                throw new ArgumentNullException(nameof(role));
+            }
+
+            if (claim == null)
+            {
+                throw new ArgumentNullException(nameof(claim));
+            }
+
+            await _repo.DeleteAsync<IdentityRoleClaim<string>>(x =>
+                x.RoleId == role.Id && 
+                x.ClaimType == claim.Type && 
+                x.ClaimValue == claim.Value);
+
+            await _repo.SaveChangesAsync();
         }
 
         public void Dispose()
