@@ -22,7 +22,7 @@ namespace PieroDeTomi.EntityFrameworkCore.Identity.Cosmos.EntityConfigurations
 
             builder
                 .UseETagConcurrency()
-                .HasPartitionKey(_ => _.Id)
+                .HasPartitionKey(_ => _.UserId)
                 .ToContainer(_tableName);
         }
     }
